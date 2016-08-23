@@ -57,12 +57,11 @@ def generate_uniform_distribution(a, b):
   return random.randint(a,b)  
 
 
-"""
-#if '__name__' == '__main__':
-G = generate_graph(100,100,0.11,0,'Substrate')
-print G.number_of_nodes()
-print G.number_of_edges()
-print G.nodes()
+if __name__ == '__main__':
+  G = generate_graph(100,100,0.11,0,'Substrate')
+  print G.number_of_nodes()
+  print G.number_of_edges()
+  print G.nodes()
+  print G.edges()
 #for i in range(0,100):
 #  print generate_uniform_distribution(1,100)
-"""
