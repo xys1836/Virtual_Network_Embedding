@@ -46,10 +46,11 @@ def generate_graph(n, g, p, s, name = None):
         a = int(edge[0])
         b = int(edge[1])
         G.add_edge(a,b)
-        print edge,a,b
         continue
+
       if line[0:5] == 'EDGES':# (from-node to-node length a b):':
         isEdge = True
+
   return G
  
 def generate_uniform_distribution(a, b):
