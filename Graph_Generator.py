@@ -56,7 +56,7 @@ def generate_basic_graph(n, g, p, s, name = None):
 def generate_uniform_distribution(a, b):
   return random.randint(a,b)  
 
-  def generate_substrate_network(n, g, p, s, nm, cpu_c, bw_c):
+def generate_substrate_network(n, g, p, s, nm, cpu_c, bw_c):
   """Generate a substrate network
     
     Input: 
@@ -79,13 +79,13 @@ def generate_uniform_distribution(a, b):
   a = cpu_c[0]
   b = cpu_c[1]
   for node in G.nodes_iter():
-    node['cpu_capacity'] = generate_uniform_distribution(a, b)
+    G[node]['cpu_capacity'] = generate_uniform_distribution(a, b)
   
   #Add Bandwidth capacity to substrate network
   a = bw_c[0]
   b = bw_c[1]
   for edge in G.edges_iter():
-    edge['bandwidth_capacity'] = generate_uniform_distribution(a, b)
+    G[edge[0]][edge[1]]['bandwidth_capacity'] = generate_uniform_distribution(a, b)
 
   return G
 
@@ -113,13 +113,13 @@ def generate_virtual_network(n, p, s, nm, cpu_d, bw_d):
   a = cpu_d[0]
   b = cpu_d[1]
   for node in G.nodes_iter():
-    node['cpu_demand'] = generate_uniform_distribution(a, b)
+    G[node]['cpu_demand'] = generate_uniform_distribution(a, b)
   
   #Add Bandwidth capacity to substrate network
   a = bw_d[0]
   b = bw_d[1]
   for edge in G.edges_iter():
-    edge['bandwidth_demand'] = generate_uniform_distribution(a, b)
+    G[edge[0]][edge[1]]['bandwidth_demand'] = generate_uniform_distribution(a, b)
 
   return G
 
@@ -127,3 +127,7 @@ def generate_virtual_network(n, p, s, nm, cpu_d, bw_d):
 if __name__ == '__main__':
   substrate_network = generate_substrate_network(100, 100, 0.11, 0, 'Substrate_Network', [50, 100], [50, 100])
   virtual_network = generate_virtual_network(6, 0.5, 0, 'Virtual_Network', [0, 50], [0, 50])
+  print 'Substrate_Network'
+  print substarte_network.graph
+  print 'Virtual_Network'
+  print virtual_network.graph
