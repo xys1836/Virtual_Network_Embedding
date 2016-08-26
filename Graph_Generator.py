@@ -3,6 +3,7 @@ import subprocess
 import random
 import networkx as nx
 
+
 def create_script_file(n,g,p,s,name = None):
   """Create Script for itm
 
@@ -12,6 +13,7 @@ def create_script_file(n,g,p,s,name = None):
       p: probility of two edge connected
       s: seed for rand
       name: name for the graph
+
     Output:
       the file path of the graph
   """
@@ -33,6 +35,20 @@ def execute_itm(file_path):
   return 0
 
 def generate_basic_graph(n, g, p, s, name = None):
+  """Generate a basic graph
+
+    Generate a basic graph without node atrributes and edge attributes
+
+    Input:
+      n: number of nodes
+      g: grid scale
+      p: probility of two edge connected
+      s: seed for rand
+      name: name for the graph
+
+    Output:
+      basic graph
+  """
   G = nx.Graph()
   for i in range(0, n):
     G.add_node(i)
@@ -47,10 +63,8 @@ def generate_basic_graph(n, g, p, s, name = None):
         b = int(edge[1])
         G.add_edge(a,b)
         continue
-
-      if line[0:5] == 'EDGES':# (from-node to-node length a b):':
+      if line[0:5] == 'EDGES':  ## EDGES (from-node to-node length a b):':
         isEdge = True
-
   return G
  
 def generate_uniform_distribution(a, b):
@@ -71,23 +85,24 @@ def generate_substrate_network(n, g, p, s, nm, cpu_c, bw_c):
     Ouput:
       A graph of n nodes with edges connectivity p in a scale of g
   """
-
   G = generate_basic_graph(n, g, p, s, nm)
   G.graph['name'] = nm
 
-  #Add CPU capacity to substarte network
+  ## Add CPU capacity to substarte network
   a = cpu_c[0]
   b = cpu_c[1]
   for node in G.nodes_iter():
-    G[node]['cpu_capacity'] = generate_uniform_distribution(a, b)
+    G.node[node]['cpu_capacity'] = generate_uniform_distribution(a, b)
   
-  #Add Bandwidth capacity to substrate network
+  ## Add Bandwidth capacity to substrate network
   a = bw_c[0]
   b = bw_c[1]
-  for edge in G.edges_iter():
-    G[edge[0]][edge[1]]['bandwidth_capacity'] = generate_uniform_distribution(a, b)
+
+  for e in G.edges_iter():
+    G.edge[e[0]][e[1]]['bandwidth_capacity'] = generate_uniform_distribution(a,b)
 
   return G
+
 
 def generate_virtual_network(n, p, s, nm, cpu_d, bw_d):
   """Generate a virtual network
@@ -109,18 +124,18 @@ def generate_virtual_network(n, p, s, nm, cpu_d, bw_d):
   G = generate_basic_graph(n, 100, p, s, nm)
   G.graph['name'] = nm
 
-  #Add CPU capacity to substarte network
+  ## Add CPU capacity to substarte network
   a = cpu_d[0]
   b = cpu_d[1]
   for node in G.nodes_iter():
-    G[node]['cpu_demand'] = generate_uniform_distribution(a, b)
+    G.node[node]['cpu_demand'] = generate_uniform_distribution(a, b)
   
-  #Add Bandwidth capacity to substrate network
+  ## Add Bandwidth capacity to substrate network
   a = bw_d[0]
   b = bw_d[1]
-  for edge in G.edges_iter():
-    G[edge[0]][edge[1]]['bandwidth_demand'] = generate_uniform_distribution(a, b)
-
+  for e in G.edges_iter():
+    G.edge[e[0]][e[1]]['bandwidth_demand'] = generate_uniform_distribution(a,b)
+  
   return G
 
 
@@ -128,6 +143,12 @@ if __name__ == '__main__':
   substrate_network = generate_substrate_network(100, 100, 0.11, 0, 'Substrate_Network', [50, 100], [50, 100])
   virtual_network = generate_virtual_network(6, 0.5, 0, 'Virtual_Network', [0, 50], [0, 50])
   print 'Substrate_Network'
-  print substarte_network.graph
-  print 'Virtual_Network'
-  print virtual_network.graph
+  print substrate_network.node[0]['cpu_capacity']
+  #print substrate_network.nodes(data = True)
+  #print substrate_network.edges(data = True)
+  #print 'Virtual_Network'
+  print substrate_network.edge[0][37]['bandwidth_capacity']
+  #print virtual_network.nodes(data = True)
+  #print virtual_network.edges(data = True)
+  for e in substrate_network.edges(0):
+    print substrate_network.edge[0][e[1]]
