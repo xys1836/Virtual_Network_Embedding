@@ -70,7 +70,10 @@ def adjacent_bandwidth_resources(G, u):
   return sum_b
 
 def bandwidth_resources_transition(G, u):
-  """Bandwidth resource transition in number form
+  """Bandwidth resource transition in numberal form
+
+    *** Warning ***
+    This function should multiple r(v) in order to calculate r(u) in numberal form 
     
     Calculate and sum each path adjacent node u 's weight among u's neighbour's 
     adjacent paths
@@ -89,5 +92,20 @@ def bandwidth_resources_transition(G, u):
   return sum_bt
     
 def transition_matrix(G):
+  """Transition matrix
   
-  return M 
+     Calculate transtion matrix. This function return a numpy matrix data structure
+
+     Input:
+       G: the graph
+
+     Output:
+       A matrix in numpy natrix form 
+  """
+  num_v = G.number_of_nodes()
+  m = np.zeros((num_v,num_v)) 
+  for node in G.nodes():
+    for neighbor in G.neighbors(node):
+      m[node][neighbor] = bandwidth_resource(G, node, neighbor) * 1.00 / adjacent_bandwidth_resources(G, neighbor)
+  m = np.matrix(m)
+  return m
