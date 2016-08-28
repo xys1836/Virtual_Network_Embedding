@@ -38,7 +38,7 @@ def normalized_computing_resource(sum_c, u):
       computing_resources/sum_of_computing_resources
     Input:
       sum_c: Sum of computing resouces
-      u: Computing resource of node u
+          u: Computing resource of node u
     Output:
       normalized computing resource of u   
   """
@@ -129,9 +129,9 @@ def grc_vector(G, th, d):
     Calculate GRC Vector according to Algorithm 1 
    
     Input:
-      G: the grpah 
+       G: the grpah 
       th: pre-set small positive threshold 
-      d: a constan damping factor 
+       d: a constan damping factor 
     Output:
       GRC vector r
   """
@@ -149,18 +149,85 @@ def grc_vector(G, th, d):
   return r_c
 
 def add_grc_to_network(G, th, d):
-  """
+  """Add grc to network
+
+    Add grc rank score to network topology G
+
+    Input:
+       G: the network topology
+      th: pre-set small positive threshold
+       d: a constant damping factor
+    Output:
+      The network topology with grc rank score
   """
   num_of_nodes = len(G.nodes())
   g_grc_vector = grc_vector(G, th, d)
+  #print g_grc_vector
   for i in range(0, num_of_nodes):
-    G.node[i]['grc'] = g_grc_vector[i]
-    print g_grc_vector[i]
-  
+    G.node[i]['grc'] = g_grc_vector[i,0]
+  return G
 
 def greedy_node_mapping(sn, vn, th, d):
-  """
-  """
-  sn_grc_vector = grc_vector(sn, th, d)
-  vn_grc_vector = grc_vector(vn, th, d)
+  """Greedy node mapping
 
+    Greedy node mapping algorithm, descripted in algorithm 2 in paper.
+
+    Input:
+      sn: the substrate network topology 
+      vn: the virtual network topology
+      th: pre-set small positive threshold
+       d: a constant damping factor
+    Output:
+        Boolean: True, if all node in virtual network mapped sucessfully, or return False
+      vn_sn_map: node mapping dictionary, {node in virtual network : node in substrate network}    
+                 *** WARNING ***
+                 the function will always return vn_sn_map although the mapping may fail
+                 in this case, vn_sn_map may be None or a partial mapping
+  """
+  #sn = add_grc_to_network(sn, th, d)
+  #vn = add_grc_to_network(vn, th, d)
+  sn_grc_node_map = {}
+  vn_grc_node_map = {}
+  vn_sn_map = {}
+  sn_grc_list = []
+  vn_grc_list = []
+  sn_grc = grc_vector(sn, th, d)
+  vn_grc = grc_vector(vn, th, d)
+  number_of_virtual_network_nodes = len(vn.nodes())
+  number_of_mapped_nodes = 0
+  for i in range(0, len(sn.nodes())):
+    ## map grc to nodes
+    sn_grc_node_map[sn_grc[i,0]] = i
+  
+  for grc,n in sorted(sn_grc_node_map.items()):
+    ## sort grc list, node with max grc come to behind
+    sn_grc_list.append(n)
+  
+  for i in range(0, len(vn.nodes())):
+    ## map grc to nodes
+    vn_grc_node_map[vn_grc[i,0]] = i
+  
+  for grc,n in sorted(vn_grc_node_map.items()):
+    ## sort grc list, node with higher grc come to behind
+    vn_grc_list.append(n)
+  
+  while sn_grc_list and vn_grc_list:
+    vn_node = vn_grc_list.pop()
+    sn_node = sn_grc_list.pop()
+    vn_cpu_capacity = vn.node[vn_node]['cpu_capacity']
+    sn_cpu_capacity = sn.node[sn_node]['cpu_capacity']
+    if sn_cpu_capacity >= vn_cpu_capacity:
+      ## the CPU capacity is sufficient for this virtual node
+      ## map this vn node to this sn node
+      vn_sn_map[vn_node] = sn_node
+      ## set sn node's cpu capacity equal new capacity
+      sn.node[sn_node]['cpu_capacity'] = sn.node[sn_node]['cpu_capacity'] - vn.node[vn_node]['cpu_capacity']
+      number_of_mapped_nodes = number_of_mapped_nodes + 1
+    else:
+      ## the CPU capacity is not sufficient for this virtual node
+      ## put the vn node back to vn_grc_list, waiting for next map
+      vn_grc_list.append(vn_node)
+  
+  return number_of_mapped_nodes == number_of_virtual_network_nodes, vn_sn_map
+
+ 
