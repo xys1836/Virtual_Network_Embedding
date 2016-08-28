@@ -128,13 +128,13 @@ def generate_virtual_network(n, p, s, nm, cpu_d, bw_d):
   a = cpu_d[0]
   b = cpu_d[1]
   for node in G.nodes_iter():
-    G.node[node]['cpu_demand'] = generate_uniform_distribution(a, b)
+    G.node[node]['cpu_capacity'] = generate_uniform_distribution(a, b)
   
   ## Add Bandwidth capacity to substrate network
   a = bw_d[0]
   b = bw_d[1]
   for e in G.edges_iter():
-    G.edge[e[0]][e[1]]['bandwidth_demand'] = generate_uniform_distribution(a,b)
+    G.edge[e[0]][e[1]]['bandwidth_capacity'] = generate_uniform_distribution(a,b)
   
   return G
 

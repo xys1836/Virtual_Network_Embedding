@@ -10,10 +10,9 @@ def grc_resources(G, d):
     u = G.node[node]['cpu_capacity'] 
     c.append(normalized_computing_resource(sum_c, u))
   r = copy.deepcopy(c)
-  #print r
+  
   for node in G.nodes():
     r[node] = (1 - d) * c[node] + d * bandwidth_resources_transition(G, node, r) 
-
   return r
 
 def global_computing_resources(G):
@@ -42,9 +41,7 @@ def normalized_computing_resource(sum_c, u):
     Output:
       normalized computing resource of u   
   """
-  c = u*1.0 / sum_c
-  
-  return c
+  return u*1.0 / sum_c
 
 def computing_resources_matrix(G):
   """Computing resources matrix
@@ -85,11 +82,12 @@ def bandwidth_resources_transition(G, u, r):
   """Bandwidth resource transition in numberal form
 
     *** Warning ***
-    This function should multiple r(v) in order to calculate r(u) in numberal form 
-    This is only used in numberal case, not in matrix case
+    This function should multiple r(v) in order to 
+    calculate r(u) in numberal form. This is only used in numberal case, 
+    not in matrix case
     
-    Calculate and sum each path adjacent node u 's weight among u's neighbour's 
-    adjacent paths
+    Calculate and sum each path adjacent node u 's weight 
+    among u's neighbour's adjacent paths
     
     Input:
       G: the graph
@@ -101,13 +99,15 @@ def bandwidth_resources_transition(G, u, r):
   """
   sum_bt = 0
   for v in G.neighbors(u):
-    sum_bt = sum_bt + bandwidth_resource(G, u, v)*1.00 / adjacent_bandwidth_resources(G, v)* r[v] 
+    sum_bt = sum_bt + bandwidth_resource(G, u, v)*1.00 \
+             / adjacent_bandwidth_resources(G, v)* r[v] 
   return sum_bt
     
 def transition_matrix(G):
   """Transition matrix
     
-    Calculate transtion matrix. This function return a numpy matrix data structure
+    Calculate transtion matrix. 
+    This function return a numpy matrix data structure
 
     Input:
       G: the graph
@@ -118,7 +118,8 @@ def transition_matrix(G):
   m = np.zeros((num_v,num_v)) 
   for node in G.nodes():
     for neighbor in G.neighbors(node):
-      m[node][neighbor] = bandwidth_resource(G, node, neighbor) * 1.00 / adjacent_bandwidth_resources(G, neighbor)
+      m[node][neighbor] = bandwidth_resource(G, node, neighbor) * 1.00 \
+                          / adjacent_bandwidth_resources(G, neighbor)
   m = np.matrix(m)
   return m
 
@@ -135,12 +136,11 @@ def grc_vector(G, th, d):
     Output:
       GRC vector r
   """
-
   m = transition_matrix(G)
   c = computing_resources_matrix(G)
   r_p = c
   r_c = c.copy()
-  #print c
+  
   delta = 2**10 * 1.00 ## should be a very large float number, larger than th
   while delta >= th:
     r_c = (1-d)*c + d*(m*r_p)
@@ -162,7 +162,7 @@ def add_grc_to_network(G, th, d):
   """
   num_of_nodes = len(G.nodes())
   g_grc_vector = grc_vector(G, th, d)
-  #print g_grc_vector
+  
   for i in range(0, num_of_nodes):
     G.node[i]['grc'] = g_grc_vector[i,0]
   return G
@@ -171,21 +171,22 @@ def greedy_node_mapping(sn, vn, th, d):
   """Greedy node mapping
 
     Greedy node mapping algorithm, descripted in algorithm 2 in paper.
-
+        
+    *** WARNING ***
+    The function will always return vn_sn_map although the mapping may fail
+    In this case, vn_sn_map may be None or a partial mapping
+ 
     Input:
       sn: the substrate network topology 
       vn: the virtual network topology
       th: pre-set small positive threshold
        d: a constant damping factor
     Output:
-        Boolean: True, if all node in virtual network mapped sucessfully, or return False
-      vn_sn_map: node mapping dictionary, {node in virtual network : node in substrate network}    
-                 *** WARNING ***
-                 the function will always return vn_sn_map although the mapping may fail
-                 in this case, vn_sn_map may be None or a partial mapping
+        Boolean: True, if all node in virtual network mapped sucessfully, 
+                 or return False
+      vn_sn_map: node mapping dictionary
+                 {node in virtual network : node in substrate network}    
   """
-  #sn = add_grc_to_network(sn, th, d)
-  #vn = add_grc_to_network(vn, th, d)
   sn_grc_node_map = {}
   vn_grc_node_map = {}
   vn_sn_map = {}
@@ -195,11 +196,12 @@ def greedy_node_mapping(sn, vn, th, d):
   vn_grc = grc_vector(vn, th, d)
   number_of_virtual_network_nodes = len(vn.nodes())
   number_of_mapped_nodes = 0
+ 
   for i in range(0, len(sn.nodes())):
     ## map grc to nodes
     sn_grc_node_map[sn_grc[i,0]] = i
   
-  for grc,n in sorted(sn_grc_node_map.items()):
+  for grc, n in sorted(sn_grc_node_map.items()):
     ## sort grc list, node with max grc come to behind
     sn_grc_list.append(n)
   
@@ -207,7 +209,7 @@ def greedy_node_mapping(sn, vn, th, d):
     ## map grc to nodes
     vn_grc_node_map[vn_grc[i,0]] = i
   
-  for grc,n in sorted(vn_grc_node_map.items()):
+  for grc, n in sorted(vn_grc_node_map.items()):
     ## sort grc list, node with higher grc come to behind
     vn_grc_list.append(n)
   
@@ -221,13 +223,13 @@ def greedy_node_mapping(sn, vn, th, d):
       ## map this vn node to this sn node
       vn_sn_map[vn_node] = sn_node
       ## set sn node's cpu capacity equal new capacity
-      sn.node[sn_node]['cpu_capacity'] = sn.node[sn_node]['cpu_capacity'] - vn.node[vn_node]['cpu_capacity']
+      sn.node[sn_node]['cpu_capacity'] = sn.node[sn_node]['cpu_capacity'] \
+                                         - vn.node[vn_node]['cpu_capacity']
       number_of_mapped_nodes = number_of_mapped_nodes + 1
     else:
       ## the CPU capacity is not sufficient for this virtual node
       ## put the vn node back to vn_grc_list, waiting for next map
       vn_grc_list.append(vn_node)
-  
   return number_of_mapped_nodes == number_of_virtual_network_nodes, vn_sn_map
 
  
