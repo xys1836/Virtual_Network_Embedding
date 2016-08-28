@@ -122,6 +122,7 @@ def transition_matrix(G):
   m = np.matrix(m)
   return m
 
+
 def grc_vector(G, th, d):
   """GRC Vector
 
@@ -147,4 +148,19 @@ def grc_vector(G, th, d):
     r_p = r_c.copy()
   return r_c
 
+def add_grc_to_network(G, th, d):
+  """
+  """
+  num_of_nodes = len(G.nodes())
+  g_grc_vector = grc_vector(G, th, d)
+  for i in range(0, num_of_nodes):
+    G.node[i]['grc'] = g_grc_vector[i]
+    print g_grc_vector[i]
+  
+
+def greedy_node_mapping(sn, vn, th, d):
+  """
+  """
+  sn_grc_vector = grc_vector(sn, th, d)
+  vn_grc_vector = grc_vector(vn, th, d)
 
