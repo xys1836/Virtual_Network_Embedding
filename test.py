@@ -3,6 +3,7 @@ from graph_generator import generate_virtual_network
 from global_resource_capacity_algorithm import greedy_node_mapping
 from global_resource_capacity_algorithm import shortest_path_based_link_mapping
 from global_resource_capacity_algorithm import grc_mapping
+from poisson_process import next_time
 sn = generate_substrate_network(100, 100, 0.11, 0, 
                                 'Substrate_Network', 
                                 [50, 100], [50, 100])
@@ -42,3 +43,8 @@ print 'virtual node mapping'
 print vn_sn_node_map
 print 'virtual link mapping'
 print vn_sn_link_map
+
+
+
+
+

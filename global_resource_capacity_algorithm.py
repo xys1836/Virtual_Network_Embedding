@@ -2,6 +2,12 @@ import numpy as np
 import logging
 import copy
 import networkx as nx
+"""
+logging.basicConfig(format ='%(asctime)s %(message)s', \
+                    datefmt='%m/%d/%Y%I:%M:%S%p', \
+                    filename = 'grc.log', \
+                    level=logging.DEBUG)
+"""
 
 def grc_resources(G, d):
   r = []
@@ -26,9 +32,13 @@ def global_computing_resources(G):
     Output:
       The global computing resources
   """
+  #logging.debug('global_computing_resources')
   sum_c = 0
   for node in G.nodes():
+    #print 'node capacity',G.node[node]['cpu_capacity']
     sum_c = sum_c + G.node[node]['cpu_capacity'] 
+  #logging.debug('global_computing_resources: %s', sum_c)a
+  #print 'sum_c: ', sum_c
   return sum_c
 
 def normalized_computing_resource(sum_c, u):
@@ -42,6 +52,7 @@ def normalized_computing_resource(sum_c, u):
     Output:
       normalized computing resource of u   
   """
+  #logging.debug(normalized_computing_resource)
   return u*1.0 / sum_c
 
 def computing_resources_matrix(G):
@@ -74,9 +85,14 @@ def adjacent_bandwidth_resources(G, u):
     Output:
       The sum of bandwidth capacities of node u's adjacent paths
   """
+  #logging.debug('adjacent_bandwidth_resources')
   sum_b = 0
   for n in G.neighbors(u):
     sum_b = sum_b + bandwidth_resource(G, u, n)
+    #logging.debug(sum_b)
+  #logging.debug('adjacent_bandwidth_resources: %s', sum_b)
+  if sum_b is 0:
+    logging.error('adjacent_bandwidth_resources is ZERO')
   return sum_b
 
 def bandwidth_resources_transition(G, u, r):
@@ -197,7 +213,7 @@ def greedy_node_mapping(sn, vn, th, d):
   vn_grc = grc_vector(vn, th, d)
   number_of_virtual_network_nodes = len(vn.nodes())
   number_of_mapped_nodes = 0
- 
+
   for i in range(0, len(sn.nodes())):
     ## map grc to nodes
     sn_grc_node_map[sn_grc[i,0]] = i
@@ -213,7 +229,6 @@ def greedy_node_mapping(sn, vn, th, d):
   for grc, n in sorted(vn_grc_node_map.items()):
     ## sort grc list, node with highest grc come to last
     vn_grc_list.append(n)
-  
   while sn_grc_list and vn_grc_list:
     vn_node = vn_grc_list.pop()
     sn_node = sn_grc_list.pop()
@@ -232,7 +247,7 @@ def greedy_node_mapping(sn, vn, th, d):
       ## put the vn node back to vn_grc_list, waiting for next map
       vn_grc_list.append(vn_node)
   return number_of_mapped_nodes == number_of_virtual_network_nodes, \
-         vn_sn_node_map
+         vn_sn_node_map, sn
 
 def shortest_path_based_link_mapping(sn, vn, vn_sn_node_map):
   """Shortest path based link mapping
@@ -282,7 +297,7 @@ def shortest_path_based_link_mapping(sn, vn, vn_sn_node_map):
     except nx.NetworkXNoPath:
       ## If there is no path between nodes, throw this exception
       ## and return False
-      return False, vn_sn_link_map
+      return False, vn_sn_link_map, sn
     if shortest_path:
       ## If there is a shortest path between nodes,
       ## Update the bandwidth along the path in substrate network
@@ -295,8 +310,8 @@ def shortest_path_based_link_mapping(sn, vn, vn_sn_node_map):
           = sn.edge[node_u][node_v]['bandwidth_capacity'] - vn_bw_cap    
     else:
       ##  If there is not a shortest path between nodes
-      return False, vn_sn_link_map
-  return True, vn_sn_link_map
+      return False, vn_sn_link_map, sn
+  return True, vn_sn_link_map, sn
 
 
 def grc_mapping(sn, vn, th, d):
@@ -322,19 +337,34 @@ def grc_mapping(sn, vn, th, d):
                       {(node_u, node_v) : [node_u, node_v, node_x,...]}
 
   """
+  #logging.info('GRC mapping \n GRC_th: %s \n GRC_d: %s', th, d)
   vn_sn_node_map = {}
   vn_sn_link_map = {}
-  suc = False
-  (suc, vn_sn_node_map) = greedy_node_mapping(sn, vn, th, d)
-  if suc:
-    (suc, vn_sn_link_map) = shortest_path_based_link_mapping(sn, vn, 
+  sn_tmp = copy.deepcopy(sn)
+  suc_node = False
+  suc_link = False
+  sn = sn_tmp 
+  #logging.info('GRC node mapping: %s', suc)
+  if suc_node:
+    (suc_link, vn_sn_link_map, sn_tmp) = shortest_path_based_link_mapping(sn_tmp, vn, 
                                                             vn_sn_node_map)
-    if suc:
-      return True, vn_sn_node_map, vn_sn_link_map
+    # logging.info('GRC link mapping: %s', suc_node)
+    if suc_link:
+      #logging.info(vn_sn_node_map)
+      #logging.info(vn_sn_link_map)
+      sn = copy.deepcopy(sn_tmp)
+      #sn = sn_tmp
+      return True, vn_sn_node_map, vn_sn_link_map, sn_tmp
     else:
-      return False, vn_sn_node_map, vn_sn_link_map
+      return False, vn_sn_node_map, vn_sn_link_map, sn_tmp
   else:
-    return False, vn_sn_node_map, vn_sn_link_map
+    return False, vn_sn_node_map, vn_sn_link_map, sn_tmp
 
 
+class GRC:
+  def __init__(self, th, d):
+    self.thred = th
+    self.delt = d
+  def mapping(self, sn, vn):
+    return grc_mapping(sn, vn, self.thred, self.delt)
 

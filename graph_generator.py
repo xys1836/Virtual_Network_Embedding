@@ -2,8 +2,7 @@ import os
 import subprocess
 import random
 import networkx as nx
-
-
+from poisson_process import next_time 
 def create_script_file(n,g,p,s,name = None):
   """Create Script for itm
 
@@ -116,7 +115,6 @@ def generate_virtual_network(n, p, s, nm, cpu_d, bw_d):
       nm: name of the virtual network
       cpu_d: CPU demand, uniform distribution variables, a two element list [min CPU, max CPU]
       bw_d: Bandwidth demand, uniform distribution varibales, a two element list [min BW, max BW]
-    
     Output:
       A graph of n nodes with edges connectivity p 
       
@@ -138,10 +136,31 @@ def generate_virtual_network(n, p, s, nm, cpu_d, bw_d):
   
   return G
 
+def generate_virtual_network_with_lifetime(n, p, s, nm, cpu_d, bw_d, lf_t):
+  g = generate_virtual_network(n, p, s, nm, cpu_d, bw_d)
+  g.lifetime = next_time(1/(lf_t*1.0))
+  return g
+
+class Grap_Generator:
+  def __init__(self):
+    pass
+  def substrate_network(self):
+    pass
+  def virtual_network(self):
+    pass
+
+
+
+
+
+
 
 if __name__ == '__main__':
-  substrate_network = generate_substrate_network(100, 100, 0.11, 0, 'Substrate_Network', [50, 100], [50, 100])
+  substrate_network = generate_substrate_network(10, 100, 0.5, 0, 'Substrate_Network', [50, 100], [50, 100])
+  """
   virtual_network = generate_virtual_network(6, 0.5, 0, 'Virtual_Network', [0, 50], [0, 50])
+  virtual_network_with_lifetime = generate_virtual_network_with_lifetime(6,      0.5, 0, 'Virtual_Network', [0, 50], [0, 50], 50)
+  print virtual_network_with_lifetime.lifetime
   print 'Substrate_Network'
   print substrate_network.node[0]['cpu_capacity']
   #print substrate_network.nodes(data = True)
@@ -152,3 +171,4 @@ if __name__ == '__main__':
   #print virtual_network.edges(data = True)
   for e in substrate_network.edges(0):
     print substrate_network.edge[0][e[1]]
+  """
